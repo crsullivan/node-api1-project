@@ -39,10 +39,8 @@ server.get('/api/users/:id', (req, res) => {
   server.put('/api/users/:id', (req, res) => {
     const id = req.params.id
     const editUser = req.body
-    if (!name || !bio) {
-        res
-        .status(400)
-        .json({ error: "Please provide name and bio for the user." });
+    if (!Object.keys(editUser).includes("name") || !Object.keys(editUser).includes("bio")){
+        return res.status(400).json({ errorMessage: "Please provide name and bio for the user." })
     }
     db.update(id, editUser)
       .then(users => {
@@ -59,7 +57,7 @@ server.post('/api/users', (req, res) => {
     if (!Object.keys(newInfo).includes("name") || !Object.keys(newInfo).includes("bio")){
         return res.status(400).json({ errorMessage: "Please provide name and bio for the user." })
     }
-    
+
   db.insert(newInfo)
     .then(user => {
       res.status(201).json(newInfo);
@@ -72,15 +70,19 @@ server.post('/api/users', (req, res) => {
 
 server.delete('/api/users/:id', (req, res) => {
   const id = req.params.id;
-
-  db.remove(id)
-    .then(count => {
-      res.status(200).json({ message: `user with id ${id} deleted` });
-    })
-    .catch(err => {
-      console.log('error', err);
-      res.status(500).json({ error: 'failed to delete user from the db' });
-    });
+  const isFound = db.findById(id)
+    if (isFound != null){
+        db.remove(id)
+            .then(count => {
+                res.status(200).json({ message: `user with id ${id} deleted` });
+        })
+        .catch(err => {
+            console.log('error', err);
+            res.status(500).json({ error: 'failed to delete user from the db' });
+        });
+    } else {
+        return res.status(400).json({ errorMessage: "The user with the specified ID does not exist."})}
+  
 });
 
 const port = 8000;
